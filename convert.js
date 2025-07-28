@@ -18,6 +18,7 @@ try {
         username: 'username',
         password: 'password',
         notes: 'notes',
+        email: 'email',
         category: 'category'
     };
 
@@ -25,6 +26,7 @@ try {
         if (
             item.category === 'login'
             || item.category === 'password'
+            || item.category === 'note'
             || item.category === 'uncategorized'
         ) {
             const rowData = {
@@ -43,9 +45,15 @@ try {
                         if (field.type === type) {
                             if (field.value && !rowData[key]) {
                                 if (field.value === 'url') {
-                                    rowData['website'] = '"' + field.value + '"'; 
+                                    rowData['website'] = field.value;
+                                } else if (field.type === 'email') {
+                                    if (!rowData['username']) {
+                                        rowData['username'] = field.value;
+                                    } else if (field.value != '') {
+                                        rowData['notes'] += `\n\nEmail: ${field.value}\n\n`;
+                                    }
                                 } else {
-                                    rowData[key] = '"' + field.value + '"';
+                                    rowData[key] += field.value;
                                 }
                             }
                         }
@@ -55,7 +63,7 @@ try {
 
             csvOutput.push(
                 Object.keys(rowData)
-                .map(key => rowData[key])
+                .map(key => '"' + (key == 'password' ? rowData[key].replaceAll('"', '""') : rowData[key].replaceAll('"', '""').replaceAll("\n\n\n\n", "\n\n").trim()) + '"')
                 .join(','),
             );
 
